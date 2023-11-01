@@ -5,7 +5,7 @@ vec2 = pg.math.Vector2
 
 
 class Snake:
-    def __init__(self, game, color, keys):
+    def __init__(self, game, color, keys, snake_number):
         self.color = color
         self.l = keys[0]
         self.r = keys[1]
@@ -18,11 +18,24 @@ class Snake:
                                   game.TILE_SIZE - 2])
         self.rect.center = self.get_random_position()
         self.direction = vec2(0, 0)
-        self.step_delay = 100
+        self.step_delay = 50
         self.time = 0
         self.lenght = 1
         self.segments = []
         self.directions = {self.l: 1, self.r: 1, self.u: 1, self.d: 1}
+        self.snake_number = snake_number
+
+    def check_collision(self):
+        if self.snake_number != 1:
+            for segment in self.game.snake1.segments:
+                if segment.center == self.rect.center:
+                    self.game.new_game()
+        if self.snake_number != 2:
+            for segment in self.game.snake2.segments:
+                if segment.center == self.rect.center:
+                    self.game.new_game()
+
+
 
     def check_food(self):
         if self.rect.center == self.game.food.rect.center:
@@ -56,24 +69,6 @@ class Snake:
                 self.direction = vec2(0, self.size)
                 self.directions = {self.l: 1, self.r: 1, self.u: 0, self.d: 1}
 
-    def control2(self, event):
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_RIGHT and self.directions[pg.K_d]:
-                self.direction = vec2(self.size, 0)
-                self.directions = {pg.K_d: 1, pg.K_w: 1, pg.K_a: 0, pg.K_s: 1}
-
-            if event.key == pg.K_UP and self.directions[pg.K_w]:
-                self.direction = vec2(0, -self.size)
-                self.directions = {pg.K_d: 1, pg.K_w: 1, pg.K_a: 1, pg.K_s: 0}
-
-            if event.key == pg.K_LEFT and self.directions[pg.K_a]:
-                self.direction = vec2(-self.size, 0)
-                self.directions = {pg.K_d: 0, pg.K_w: 1, pg.K_a: 1, pg.K_s: 1}
-
-            if event.key == pg.K_DOWN and self.directions[pg.K_s]:
-                self.direction = vec2(0, self.size)
-                self.directions = {pg.K_d: 1, pg.K_w: 0, pg.K_a: 1, pg.K_s: 1}
-
     def delta_time(self):
         time_now = pg.time.get_ticks()
         if time_now - self.time > self.step_delay:
@@ -97,6 +92,8 @@ class Snake:
         self.check_food()
         self.check_border()
         self.check_if_collision()
+        self.check_collision()
+
 
     def draw(self):
         [pg.draw.rect(self.game.screen, self.color, segment) for segment in self.segments]
