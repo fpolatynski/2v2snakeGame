@@ -1,11 +1,22 @@
 import pygame as pg
 from random import randrange
 
+
 vec2 = pg.math.Vector2
+snake1 = (227, 57, 25)
+snake2 = (26, 147, 187)
+green = (0, 255, 0)
+blue = (0, 0, 255)
+yellow = (255, 255, 0)
+black = (0, 0, 0)
+light_pink = (255, 182, 193)
+pink = (255, 105, 180)
+dark_pink = (255, 20, 147)
+background = (245, 246, 246)
 
 
 class Snake:
-    def __init__(self, game, color, keys, snake_number):
+    def __init__(self, game, color, keys, snake_color, image):
         self.color = color
         self.l = keys[0]
         self.r = keys[1]
@@ -14,60 +25,85 @@ class Snake:
         self.game = game
         self.size = game.TILE_SIZE
         self.rect = pg.rect.Rect([0, 0,
-                                  game.TILE_SIZE - 2,
-                                  game.TILE_SIZE - 2])
+                                  game.TILE_SIZE,
+                                  game.TILE_SIZE])
         self.rect.center = self.get_random_position()
         self.direction = vec2(0, 0)
-        self.step_delay = 50
+        self.step_delay = 100
         self.time = 0
         self.lenght = 1
         self.segments = []
         self.directions = {self.l: 1, self.r: 1, self.u: 1, self.d: 1}
-        self.snake_number = snake_number
+        self.snake_color = snake_color
+        self.img = import_image(image, 0.27, (1,1,1))
+        self.head = self.img
+
+    def end_of_snake(self):
+        self.game.end = True
+        self.game.losser = self.snake_color
 
     def check_collision(self):
-        if self.snake_number != 1:
+        if self.snake_color != 'green':
             for segment in self.game.snake1.segments:
                 if segment.center == self.rect.center:
-                    self.game.new_game()
-        if self.snake_number != 2:
+                    self.end_of_snake()
+        if self.snake_color != 'blue':
             for segment in self.game.snake2.segments:
                 if segment.center == self.rect.center:
-                    self.game.new_game()
-
-
+                    self.end_of_snake()
 
     def check_food(self):
         if self.rect.center == self.game.food.rect.center:
             self.game.food.rect.center = self.get_random_position()
-            self.lenght += 5
+            self.lenght += 4
+        if self.rect.center == self.game.food1.rect.center:
+            self.game.food1.rect.center = self.get_random_position()
+            self.lenght += 3
+        if self.rect.center == self.game.food2.rect.center:
+            self.game.food2.rect.center = self.get_random_position()
+            self.lenght += 2
 
     def check_border(self):
         if self.rect.left < 0 or self.rect.right > self.game.WINDOW_SIZE:
-            self.game.new_game()
+            self.end_of_snake()
         if self.rect.top < 0 or self.rect.bottom > self.game.WINDOW_SIZE:
-            self.game.new_game()
+            self.end_of_snake()
+
+    def check_border1(self):
+        if self.rect.left < 0:
+            self.rect.right = self.game.WINDOW_SIZE
+        if self.rect.right > self.game.WINDOW_SIZE:
+            self.rect.left = 0
+        if self.rect.top < 0:
+            self.rect.bottom = self.game.WINDOW_SIZE
+        if self.rect.bottom > self.game.WINDOW_SIZE:
+            self.rect.top = 0
 
     def check_if_collision(self):
         if len(self.segments) > len(set([segment.center for segment in self.segments])):
-            self.game.new_game()
+            self.end_of_snake()
 
     def control(self, event):
         if event.type == pg.KEYDOWN:
             if event.key == self.r and self.directions[self.r]:
                 self.direction = vec2(self.size, 0)
-                self.directions = {self.l: 0, self.r: 1, self.u: 1, self.d: 1}
+                self.directions = {self.l: 0, self.r: 0, self.u: 1, self.d: 1}
+                self.head = pg.transform.rotate(self.img, 270)
+
             if event.key == self.u and self.directions[self.u]:
                 self.direction = vec2(0, -self.size)
-                self.directions = {self.l: 1, self.r: 1, self.u: 1, self.d: 0}
+                self.directions = {self.l: 1, self.r: 1, self.u: 0, self.d: 0}
+                self.head = self.img
                 
             if event.key == self.l and self.directions[self.l]:
                 self.direction = vec2(-self.size, 0)
-                self.directions = {self.l: 1, self.r: 0, self.u: 1, self.d: 1}
+                self.directions = {self.l: 0, self.r: 0, self.u: 1, self.d: 1}
+                self.head = pg.transform.rotate(self.img, 90)
                 
             if event.key == self.d and self.directions[self.d]:
                 self.direction = vec2(0, self.size)
-                self.directions = {self.l: 1, self.r: 1, self.u: 0, self.d: 1}
+                self.directions = {self.l: 1, self.r: 1, self.u: 0, self.d: 0}
+                self.head = pg.transform.rotate(self.img, 180)
 
     def delta_time(self):
         time_now = pg.time.get_ticks()
@@ -94,20 +130,19 @@ class Snake:
         self.check_if_collision()
         self.check_collision()
 
-
     def draw(self):
         [pg.draw.rect(self.game.screen, self.color, segment) for segment in self.segments]
-        pg.draw.rect(self.game.screen, self.color, self.rect)
-
+        self.game.screen.blit(self.head, (self.rect.left, self.rect.top))
 
 class Food:
     def __init__(self, game):
-            self.game = game
-            self.size = game.TILE_SIZE
-            self.rect = pg.rect.Rect([0, 0,
-                                      game.TILE_SIZE - 2,
-                                      game.TILE_SIZE - 2])
-            self.rect.center = self.get_random_position()
+        self.game = game
+        self.size = game.TILE_SIZE
+        self.image = import_image('images/395924170_362126409591457_3264820425761584893_n.png', 0.1, (245, 246, 246))
+        self.rect = pg.rect.Rect([0, 0,
+                                  game.TILE_SIZE - 2,
+                                  game.TILE_SIZE - 2])
+        self.rect.center = self.get_random_position()
 
     def get_random_position(self):
         return [randrange(self.size//2,
@@ -115,4 +150,39 @@ class Food:
                           self.size)] * 2
 
     def draw(self):
-        pg.draw.rect(self.game.screen, (255, 0, 0), self.rect)
+        #pg.draw.rect(self.game.screen, (255, 0, 0), self.rect)
+        self.game.screen.blit(self.image, (self.rect.left, self.rect.top))
+
+class Button:
+    def __init__(self, game, x, y, image, scale):
+        self.game = game
+        width = image.get_width()
+        height = image.get_height()
+        self.image = pg.transform.scale(image, (int(width * scale), int(height * scale)))
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.clicked = False
+
+    def draw(self):
+        action = False
+        pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                self.clicked = True
+
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+
+        self.game.screen.blit(self, image, )
+
+
+def draw_text(game, text, font, text_col, x, y):
+    img = font.render(text, True, text_col)
+    game.screen.blit(img, (x, y))
+
+
+def import_image(image, scale, colorkey):
+    im = pg.image.load(image)
+    im.set_colorkey(colorkey)
+    im = pg.transform.scale(im, (int(im.get_width() * scale), int(im.get_height() * scale)))
+    return im
