@@ -101,9 +101,7 @@ class Snake:
 
     def check_if_collision(self):
         if len(self.segments) > len(set([segment.center for segment in self.segments])):
-            print('g')
-            print(self.segments)
-            #self.end_of_snake()
+            self.end_of_snake()
 
     def control(self, event):
         if event.type == pg.KEYDOWN:

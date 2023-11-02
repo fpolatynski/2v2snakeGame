@@ -8,7 +8,7 @@ class Game:
         self.player1 = None
         pg.init()
         self.main_color = go.background
-        self.WINDOW_SIZE = 1200
+        self.WINDOW_SIZE = 900
         self.TILE_SIZE = 30
         self.screen = pg.display.set_mode([self.WINDOW_SIZE] * 2)
         pg.display.set_caption("Pinky Snake")
