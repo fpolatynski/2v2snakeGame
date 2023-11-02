@@ -5,6 +5,8 @@ from random import randrange
 vec2 = pg.math.Vector2
 snake1 = (227, 57, 25)
 snake2 = (26, 147, 187)
+snake3 = (122, 13, 89)
+snake4 = (31, 3, 106)
 green = (0, 255, 0)
 blue = (0, 0, 255)
 yellow = (255, 255, 0)
@@ -28,29 +30,45 @@ class Snake:
                                   game.TILE_SIZE,
                                   game.TILE_SIZE])
         self.rect.center = self.get_random_position()
-        self.direction = vec2(0, 0)
+        self.direction = vec2(self.size, 0)
         self.step_delay = 100
         self.time = 0
         self.lenght = 1
         self.segments = []
         self.directions = {self.l: 1, self.r: 1, self.u: 1, self.d: 1}
         self.snake_color = snake_color
-        self.img = import_image(image, 0.27, (1,1,1))
+        self.img = import_image(image, 0.2, (0, 0, 0))
         self.head = self.img
 
     def end_of_snake(self):
-        self.game.end = True
-        self.game.losser = self.snake_color
+        self.game.alive[self.snake_color] = 0
+        self.game.table.append(self.snake_color)
+        self.segments = []
 
     def check_collision(self):
-        if self.snake_color != 'green':
+        if self.snake_color != 'red':
             for segment in self.game.snake1.segments:
                 if segment.center == self.rect.center:
+                    print('a')
                     self.end_of_snake()
-        if self.snake_color != 'blue':
-            for segment in self.game.snake2.segments:
-                if segment.center == self.rect.center:
-                    self.end_of_snake()
+        if self.game.number_of_players > 1:
+            if self.snake_color != 'light blue':
+                for segment in self.game.snake2.segments:
+                    if segment.center == self.rect.center:
+                        print('b')
+                        self.end_of_snake()
+        if self.game.number_of_players > 2:
+            if self.snake_color != 'violete':
+                for segment in self.game.snake3.segments:
+                    if segment.center == self.rect.center:
+                        print('c')
+                        self.end_of_snake()
+        if self.game.number_of_players > 3:
+            if self.snake_color != 'dark blue':
+                for segment in self.game.snake4.segments:
+                    if segment.center == self.rect.center:
+                        print('d')
+                        self.end_of_snake()
 
     def check_food(self):
         if self.rect.center == self.game.food.rect.center:
@@ -63,13 +81,15 @@ class Snake:
             self.game.food2.rect.center = self.get_random_position()
             self.lenght += 2
 
-    def check_border(self):
+    def check_border1(self):
         if self.rect.left < 0 or self.rect.right > self.game.WINDOW_SIZE:
+            print('e')
             self.end_of_snake()
         if self.rect.top < 0 or self.rect.bottom > self.game.WINDOW_SIZE:
+            print('f')
             self.end_of_snake()
 
-    def check_border1(self):
+    def check_border(self):
         if self.rect.left < 0:
             self.rect.right = self.game.WINDOW_SIZE
         if self.rect.right > self.game.WINDOW_SIZE:
@@ -81,7 +101,9 @@ class Snake:
 
     def check_if_collision(self):
         if len(self.segments) > len(set([segment.center for segment in self.segments])):
-            self.end_of_snake()
+            print('g')
+            print(self.segments)
+            #self.end_of_snake()
 
     def control(self, event):
         if event.type == pg.KEYDOWN:
@@ -134,11 +156,12 @@ class Snake:
         [pg.draw.rect(self.game.screen, self.color, segment) for segment in self.segments]
         self.game.screen.blit(self.head, (self.rect.left, self.rect.top))
 
+
 class Food:
     def __init__(self, game):
         self.game = game
         self.size = game.TILE_SIZE
-        self.image = import_image('images/395924170_362126409591457_3264820425761584893_n.png', 0.1, (245, 246, 246))
+        self.image = import_image('images/fruit1.png', 0.08, (245, 246, 246))
         self.rect = pg.rect.Rect([0, 0,
                                   game.TILE_SIZE - 2,
                                   game.TILE_SIZE - 2])
@@ -153,6 +176,7 @@ class Food:
         #pg.draw.rect(self.game.screen, (255, 0, 0), self.rect)
         self.game.screen.blit(self.image, (self.rect.left, self.rect.top))
 
+
 class Button:
     def __init__(self, game, x, y, image, scale):
         self.game = game
@@ -165,15 +189,17 @@ class Button:
 
     def draw(self):
         action = False
-        pos = pygame.mouse.get_pos()
+        pos = pg.mouse.get_pos()
         if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+            if pg.mouse.get_pressed()[0] == 1 and self.clicked == False:
                 self.clicked = True
+                action = True
 
-        if pygame.mouse.get_pressed()[0] == 0:
+        if pg.mouse.get_pressed()[0] == 0:
             self.clicked = False
 
-        self.game.screen.blit(self, image, )
+        self.game.screen.blit(self.image, (self.rect.x, self.rect.y))
+        return action
 
 
 def draw_text(game, text, font, text_col, x, y):
